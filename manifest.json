@@ -1,0 +1,8 @@
+{
+  "name": "Focus Mode Suite",
+  "package": "focus_mode_suite",
+  "min_version": 21000,
+  "max_version": 241299,
+  "description": "A distraction-free study environment that hides toolbars and menus automatically when you enter reviewer mode.",
+  "author": "Focus Mode Suite Generator"
+}
