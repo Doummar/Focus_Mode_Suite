@@ -26,4 +26,4 @@ An elegant, low-latency, distraction-free study environment add-on for Anki.
 
 - **Created by**: Adel Aitah
 - **GitHub**: [https://github.com/Doummar/Focus_Mode_Suite](https://github.com/Doummar/Focus_Mode_Suite)
-- Copyright (c) 2026 Adel Aitah — All rights reserved.
+- Copyright (c) 2026  — All rights reserved.
