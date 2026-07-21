@@ -9,7 +9,40 @@ An elegant, low-latency, distraction-free study environment add-on for Anki.
 - **Customizable Global Shortcut**: Toggle the Focus Mode instantly at any time with a hotkey (default: `F11`).
 - **Direct Configuration**: Easy, immediate configuration from Anki's Add-ons manager—simply click 'Config' on the add-on to change shortcut key or customize auto-hide preferences live! No Anki restart is required for changes to take effect.
 - **Safe & Stable**: Cross-compatible with PyQt5 and PyQt6, runs quietly in the background without affecting performance or standard database procedures.
+<br>
 
+
+<h3>Ultra Focus Mode: Focus Mode: Ultra (Card Header Hidden)</h3>
+<p align="center">
+ <img src="https://i.postimg.cc/xj3F2xrp/3-3.png"
+         style="width:100%; height:auto; border-radius:10px;">
+</p>
+
+<p align="center">
+ <img src="https://i.postimg.cc/nr2dGzYJ/3.png"
+         style="width:100%; height:auto; border-radius:10px;">
+</p>
+<h3>Standard Focus Mode: Focus Mode: Standard Enabled</h3>
+<p align="center">
+ <img src="https://i.postimg.cc/fyD2dXdm/2-2.png"
+         style="width:100%; height:auto; border-radius:10px;">
+</p>
+<p align="center">
+ <img src="https://i.postimg.cc/zBn23pyJ/2.png"
+         style="width:100%; height:auto; border-radius:10px;">
+</p>
+<h3>Normal Mode: Normal Anki mode</h3>
+<p align="center">
+ <img src="https://i.postimg.cc/VkVVhdxh/1.png"
+         style="width:100%; height:auto; border-radius:10px;">
+</p>
+
+<h3>Settings and Configuration</h3>
+<p align="center">
+ <img src="https://i.postimg.cc/9XTzFkc5/image.png"
+         style="width:100%; height:auto; border-radius:10px;">
+</p>
+<br>
 ## Installation
 
 1. Download the `focus_mode_suite.ankiaddon` file.
