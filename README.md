@@ -9,7 +9,7 @@ An elegant, low-latency, distraction-free study environment add-on for Anki.
 - **Customizable Global Shortcut**: Toggle the Focus Mode instantly at any time with a hotkey (default: `F11`).
 - **Direct Configuration**: Easy, immediate configuration from Anki's Add-ons manager—simply click 'Config' on the add-on to change shortcut key or customize auto-hide preferences live! No Anki restart is required for changes to take effect.
 - **Safe & Stable**: Cross-compatible with PyQt5 and PyQt6, runs quietly in the background without affecting performance or standard database procedures.
-<br>
+
 <h3>Ultra Focus Mode: Focus Mode: Ultra (Card Header Hidden)</h3>
 <p>
  <img src="https://i.postimg.cc/xj3F2xrp/3-3.png"
@@ -43,7 +43,6 @@ An elegant, low-latency, distraction-free study environment add-on for Anki.
  <img src="https://i.postimg.cc/9XTzFkc5/image.png"
          style="max-width:100%; width:auto; height:auto; border-radius:10px;">
 </p>
-<br>
 
 ## Installation
 
