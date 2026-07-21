@@ -427,6 +427,14 @@ def set_focus_mode_visible(enabled: bool):
         except Exception as e:
             print(f"Focus Mode: Error toggling cached widgets: {e}")
 
+def update_esc_shortcut_state():
+    """Enables or disables the ESC shortcut depending on whether Focus Mode is active."""
+    try:
+        if hasattr(mw, "focus_mode_esc_shortcut") and mw.focus_mode_esc_shortcut:
+            mw.focus_mode_esc_shortcut.setEnabled(focus_mode_state > 0 and mw.state == "review")
+    except Exception:
+        pass
+
 def delayed_hide():
     """Applies focus mode visibility settings if currently in review state."""
     global focus_mode_state
@@ -435,6 +443,8 @@ def delayed_hide():
             set_focus_mode_visible(True)
             # Dynamic top-side card template hiding on currently loaded card
             update_card_top_side_visibility()
+            # Sync ESC shortcut state
+            update_esc_shortcut_state()
 
 def schedule_delayed_hide():
     """Schedules staggered hide calls to capture slower drawing / redrawing cycles."""
@@ -468,6 +478,9 @@ def on_state_did_change(new_state: str, old_state: str):
     else:
         # Restore normal toolbars when returning to Deck List / Deck Browser
         set_focus_mode_visible(False)
+        
+    # Sync ESC shortcut state
+    update_esc_shortcut_state()
 
 def on_reviewer_state_changed(card=None):
     """Triggered during active reviewing to keep toolbars hidden with staggered delays."""
@@ -487,6 +500,9 @@ def toggle_focus_mode():
         focus_mode_state = (focus_mode_state + 1) % 3
     else:
         focus_mode_state = 0 if focus_mode_state > 0 else STARTING_STATE
+        
+    # Sync ESC shortcut state
+    update_esc_shortcut_state()
     
     if mw.state == "review":
         if focus_mode_state > 0:
@@ -543,53 +559,79 @@ def init_focus_mode():
     except Exception:
         pass
 
+    # Set up shortcut context safely
+    context = None
+    try:
+        context = Qt.ShortcutContext.ApplicationShortcut
+    except Exception:
+        context = getattr(Qt, "ApplicationShortcut", getattr(Qt.ShortcutContext, "ApplicationShortcut", None))
+
     # Prevent duplicate shortcuts
     if hasattr(mw, "focus_mode_shortcut") and mw.focus_mode_shortcut:
         try:
             mw.focus_mode_shortcut.setKey(QKeySequence(SHORTCUT_KEY))
             mw.focus_mode_shortcut.setEnabled(True)
-            return
         except Exception:
             pass
-
-    # Disable or clear any conflicting menu actions in Anki with the same shortcut
-    try:
-        for action in mw.findChildren(QAction):
-            if action.shortcut() and action.shortcut().toString() == SHORTCUT_KEY:
-                # Clear shortcut of the conflicting action to avoid conflict when menu bar is shown
-                action.setShortcut(QKeySequence(""))
-    except Exception as e:
-        print(f"Focus Mode: Error clearing conflicting actions: {e}")
-
-    # Create the low-level QShortcut with ApplicationShortcut context
-    try:
-        shortcut = QShortcut(QKeySequence(SHORTCUT_KEY), mw)
-        shortcut.activated.connect(toggle_focus_mode)
-        # Set ApplicationShortcut context so it is triggered globally even if the focus is in the webview
+    else:
+        # Disable or clear any conflicting menu actions in Anki with the same shortcut
         try:
-            context = Qt.ShortcutContext.ApplicationShortcut
+            for action in mw.findChildren(QAction):
+                if action.shortcut() and action.shortcut().toString() == SHORTCUT_KEY:
+                    # Clear shortcut of the conflicting action to avoid conflict when menu bar is shown
+                    action.setShortcut(QKeySequence(""))
+        except Exception as e:
+            print(f"Focus Mode: Error clearing conflicting actions: {e}")
+
+        # Create the low-level QShortcut with ApplicationShortcut context
+        try:
+            shortcut = QShortcut(QKeySequence(SHORTCUT_KEY), mw)
+            shortcut.activated.connect(toggle_focus_mode)
+            if context is not None:
+                shortcut.setContext(context)
+            
+            # Store on mw to prevent garbage collection
+            mw.focus_mode_shortcut = shortcut
+        except Exception as e:
+            print(f"Focus Mode: Error creating QShortcut: {e}")
+            # Fallback to standard QAction if QShortcut fails
+            try:
+                # Prevent duplicate actions
+                for action in mw.actions():
+                    if action.text() == "Toggle Focus Mode":
+                        return
+                action = QAction("Toggle Focus Mode", mw)
+                action.setShortcut(QKeySequence(SHORTCUT_KEY))
+                action.triggered.connect(toggle_focus_mode)
+                mw.addAction(action)
+            except Exception as e2:
+                print(f"Focus Mode: Fallback QAction failed: {e2}")
+
+    # Register ESC key shortcut to exit Focus Mode back to normal
+    if hasattr(mw, "focus_mode_esc_shortcut") and mw.focus_mode_esc_shortcut:
+        try:
+            mw.focus_mode_esc_shortcut.setEnabled(focus_mode_state > 0 and mw.state == "review")
         except Exception:
-            context = getattr(Qt, "ApplicationShortcut", getattr(Qt.ShortcutContext, "ApplicationShortcut", None))
-        
-        if context is not None:
-            shortcut.setContext(context)
-        
-        # Store on mw to prevent garbage collection
-        mw.focus_mode_shortcut = shortcut
-    except Exception as e:
-        print(f"Focus Mode: Error creating QShortcut: {e}")
-        # Fallback to standard QAction if QShortcut fails
+            pass
+    else:
         try:
-            # Prevent duplicate actions
-            for action in mw.actions():
-                if action.text() == "Toggle Focus Mode":
-                    return
-            action = QAction("Toggle Focus Mode", mw)
-            action.setShortcut(QKeySequence(SHORTCUT_KEY))
-            action.triggered.connect(toggle_focus_mode)
-            mw.addAction(action)
-        except Exception as e2:
-            print(f"Focus Mode: Fallback QAction failed: {e2}")
+            esc_shortcut = QShortcut(QKeySequence("Esc"), mw)
+            def handle_esc_trigger():
+                global focus_mode_state
+                if mw.state == "review" and focus_mode_state > 0:
+                    focus_mode_state = 0
+                    set_focus_mode_visible(False)
+                    update_card_top_side_visibility()
+                    update_esc_shortcut_state()
+                    from aqt.utils import tooltip
+                    tooltip("Focus Mode: Disabled (Returned to Normal)")
+            esc_shortcut.activated.connect(handle_esc_trigger)
+            if context is not None:
+                esc_shortcut.setContext(context)
+            mw.focus_mode_esc_shortcut = esc_shortcut
+            esc_shortcut.setEnabled(focus_mode_state > 0 and mw.state == "review")
+        except Exception as e:
+            print(f"Focus Mode: Error creating ESC QShortcut: {e}")
     
     # Initial trigger check
     if mw.state == "review":
@@ -600,6 +642,9 @@ def init_focus_mode():
             focus_mode_state = 0
             set_focus_mode_visible(False)
             update_card_top_side_visibility()
+
+    # Sync ESC shortcut on initialization
+    update_esc_shortcut_state()
 
 def on_configure():
     """Opens a custom PyQt configuration dialog when clicked in Anki's Add-ons manager."""
@@ -730,6 +775,9 @@ def on_configure():
         else:
             set_focus_mode_visible(False)
             
+        # Sync ESC shortcut state
+        update_esc_shortcut_state()
+            
         # Re-initialize the shortcut key immediately with the new hotkey!
         try:
             if hasattr(mw, "focus_mode_shortcut") and mw.focus_mode_shortcut:
@@ -790,6 +838,8 @@ def cleanup_focus_mode_on_close(*args, **kwargs):
         # Restore card top side elements
         focus_mode_state = 0
         update_card_top_side_visibility()
+        # Sync ESC shortcut state
+        update_esc_shortcut_state()
     except Exception as e:
         print(f"Focus Mode: Error during cleanup on close: {e}")
 
